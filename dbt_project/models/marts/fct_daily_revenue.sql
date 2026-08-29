@@ -8,7 +8,7 @@ with completed_orders as (
     where status = 'completed'
 ),
 active_customers as (
-    select *
+    select distinct customer_id
     from {{ ref('stg_customers') }}
     where is_active = true
 )
@@ -21,3 +21,4 @@ left join active_customers c
     on o.customer_id = c.customer_id
 group by 1
 order by 1
+

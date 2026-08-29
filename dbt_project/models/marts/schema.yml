@@ -5,8 +5,15 @@ models:
     description: Daily completed-order revenue for the CEO dashboard.
     columns:
       - name: order_date
+        description: Primary date of order completion
+        data_tests:
+          - not_null
+          - unique
+      - name: completed_order_rows
+        description: Count of completed order rows aggregated per date
         data_tests:
           - not_null
       - name: daily_revenue
+        description: Total aggregated daily revenue in USD
         data_tests:
           - not_null

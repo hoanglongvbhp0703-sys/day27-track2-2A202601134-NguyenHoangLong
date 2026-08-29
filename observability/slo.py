@@ -35,17 +35,50 @@ def evaluate_multiwindow_burn(
     *,
     short_window_burn: float,
     long_window_burn: float,
-    policy: str = "starter",
+    policy: str = "sre_multiwindow",
 ) -> dict[str, Any]:
-    """TODO(student): implement a real multi-window burn-rate policy.
+    """Evaluate multi-window multi-burn-rate alerting policy.
 
-    Starter intentionally never pages. Hidden evaluation contains cases that
-    require distinguishing sustained fast burn from a transient spike.
+    Distinguishes sustained fast burn (requiring page) from short transient spikes (warn only).
+    Standard SRE thresholds:
+    - Fast sustained burn: short_window > 14.4 and long_window > 6.0 -> page=True, severity='critical'
+    - Transient spike: short_window > 14.4 and long_window <= 6.0 -> page=False, severity='warning'
+    - Medium burn: long_window > 3.0 or short_window > 3.0 -> page=False, severity='warning'
+    - Normal: otherwise -> page=False, severity='info'
     """
-    return {
-        "page": False,
-        "severity": "info",
-        "reason": "starter_policy_not_implemented",
-        "short_window_burn": short_window_burn,
-        "long_window_burn": long_window_burn,
-    }
+    short_b = float(short_window_burn)
+    long_b = float(long_window_burn)
+
+    if short_b > 14.4 and long_b > 6.0:
+        return {
+            "page": True,
+            "severity": "critical",
+            "reason": f"Sustained fast burn rate detected: short={short_b:.1f}, long={long_b:.1f}",
+            "short_window_burn": short_b,
+            "long_window_burn": long_b,
+        }
+    elif short_b > 14.4 and long_b <= 6.0:
+        return {
+            "page": False,
+            "severity": "warning",
+            "reason": f"Transient spike detected (no page): short={short_b:.1f}, long={long_b:.1f}",
+            "short_window_burn": short_b,
+            "long_window_burn": long_b,
+        }
+    elif long_b > 3.0 or short_b > 3.0:
+        return {
+            "page": False,
+            "severity": "warning",
+            "reason": f"Elevated burn rate detected: short={short_b:.1f}, long={long_b:.1f}",
+            "short_window_burn": short_b,
+            "long_window_burn": long_b,
+        }
+    else:
+        return {
+            "page": False,
+            "severity": "info",
+            "reason": f"Burn rate within normal range: short={short_b:.1f}, long={long_b:.1f}",
+            "short_window_burn": short_b,
+            "long_window_burn": long_b,
+        }
+
